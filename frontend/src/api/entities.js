@@ -1,4 +1,5 @@
 import {api} from './client.js';
 export const datasets={list:()=>api('/datasets'),get:id=>api('/datasets/'+id),create:data=>api('/datasets',{method:'POST',body:JSON.stringify(data)})};
 export const jobs={list:()=>api('/jobs'),get:id=>api('/jobs/'+id),create:data=>api('/jobs',{method:'POST',body:JSON.stringify(data)}),approve:id=>api('/jobs/'+id+'/approve',{method:'POST'})};
-export const reports={list:()=>api('/reports'),create:data=>api('/reports',{method:'POST',body:JSON.stringify(data)}),toggle:id=>api('/reports/'+id+'/toggle',{method:'POST'}),deliveries:()=>api('/deliveries')};
+export const reports={list:()=>api('/reports'),create:data=>api('/reports',{method:'POST',body:JSON.stringify(data)}),toggle:id=>api('/reports/'+id+'/toggle',{method:'POST'}),deliveries:()=>api('/deliveries'),correction:(id,data)=>api('/reports/'+id+'/corrections',{method:'POST',body:JSON.stringify(data)}),groups:()=>api('/groups')};
+export const briefings={inbox:()=>api('/briefings'),get:id=>api('/briefings/'+id),sign:(deliveryId,data)=>api('/deliveries/'+deliveryId+'/sign',{method:'POST',body:JSON.stringify(data)}),repair:()=>api('/briefings/repair',{method:'POST'})};

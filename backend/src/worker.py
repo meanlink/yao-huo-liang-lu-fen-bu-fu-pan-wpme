@@ -7,6 +7,7 @@ from src.config.settings import REDIS_URL
 from src.models import Job, Dataset, Report
 from src.services.business import analyze
 from src.services.reports import deliver
+from src.services.briefing import repair as repair_briefings
 from src.services.audit import record
 logging.basicConfig(level=logging.INFO)
 def execute(job_id):
@@ -33,6 +34,11 @@ def tick():
         for r in db.scalars(select(Report).where(Report.enabled==True,Report.next_run<=time.time())):
             d=deliver(db,r)
             if d:record(db,'worker','report.delivered',{'id':r.id,'delivery':d.id})
+        try:
+            repaired=repair_briefings(db)
+            if repaired:logging.info('Recovered %s missing sign-off records',repaired)
+        except Exception:
+            logging.exception('Briefing repair failed; will retry next tick')
         db.commit()
 def main():
     r=Redis.from_url(REDIS_URL,socket_timeout=3)

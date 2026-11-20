@@ -3,8 +3,11 @@
 描述统计与稳健分布的真实业务分析小型项目。完整模拟客户、痛点、上下游、算法公式与一天工作剧本见 [BUSINESS.md](BUSINESS.md)。
 
 ## 模块与业务流程
-数据接入（JSON/CSV、字段验证、批次指纹）→ 参数化分析（异步 Python worker）→ 结果复核（指标、图形、明细、解释、批准）→ 定时分发（本地收件箱、CSV/JSON、SHA256）；另有业务总览和审计轨迹。
-三个贯穿全栈的实体：Dataset 数据批次、Job 分析任务、Report 分发计划；辅助 User、Audit、Delivery。
+数据接入（JSON/CSV、字段验证、批次指纹）→ 参数化分析（异步 Python worker）→ 结果复核（指标、图形、明细、解释、批准）→ 定时分发（本地收件箱、CSV/JSON、SHA256）→ 班组签收（按收件组待签、组长签收、历版凭证）；另有业务总览和审计轨迹。
+三个贯穿全栈的实体：Dataset 数据批次、Job 分析任务、Report 分发计划；辅助 User、Audit、Delivery，以及班组交接的 GroupMembership、ReportGroup、DeliveryVersion、DeliveryGroup、DeliverySign。
+
+## 班组交接与签收
+每次落档生成新版权次（v1、v2…），并按该计划勾选的收件组冻结快照、生成待签记录。组长只能签本组，凭证记录该归档实际读到的版次；补发更正版只发给原收件组，旧版已签凭证仍留在旧版次，绝不计作新版已读。当前版各组全部签收后“交接完成”。落档后若中断，启动、读取收件箱和 worker 心跳都会补建缺失的待签记录，重试不重复建单。页面：分发档案（负责人补发更正版）与班组收件箱（签收、进度、历版凭证）。
 
 ## 快速启动
 ```bash
@@ -18,9 +21,11 @@ docker compose exec -T backend python -m scripts.seed_demo
 ## 演示账号与权限
 |账号|密码|真实权限|
 |---|---|---|
-|admin@demo.local|Demo123!|接入、执行、批准、分发、暂停、读取与下载|
-|analyst@demo.local|Demo123!|接入、执行、读取与下载；不能批准或安排分发|
-|viewer@demo.local|Demo123!|只读与下载|
+|admin@demo.local|Demo123!|接入、执行、批准、分发、暂停、补发更正版、读取与下载|
+|analyst@demo.local|Demo123!|接入、执行、读取与下载；不能批准或安排分发；中窑班组长可签收|
+|viewer@demo.local|Demo123!|只读与下载；西窑班成员，不能签收|
+|east@demo.local|Demo123!|东窑班组长，只能签收本组待签记录|
+|west@demo.local|Demo123!|西窑班组长，只能签收本组待签记录|
 
 ## 技术与本地开发
 Python 3.12 / FastAPI / SQLAlchemy / NumPy / SciPy / scikit-learn；PostgreSQL 16；Redis 7；Nginx；原生 HTML CSS JavaScript ES modules（用户指定）。后端所有校验、持久化和算法在服务端。无前端打包步骤。

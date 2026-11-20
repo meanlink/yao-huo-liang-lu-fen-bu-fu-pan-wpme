@@ -13,6 +13,12 @@ from migrations.initial import migrate
 @asynccontextmanager
 async def lifespan(app):
     migrate()
+    try:
+        from src.services.briefing import repair as repair_briefings
+        with Session() as db:
+            repair_briefings(db); db.commit()
+    except Exception:
+        logging.exception('Briefing repair skipped; inbox will retry on read')
     if os.getenv('SEED_DEMO','true').lower()=='true':
         try:
             from scripts.seed_demo import seed
